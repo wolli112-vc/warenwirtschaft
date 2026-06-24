@@ -4,11 +4,28 @@ import os
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 
-DATA_FILE = "/data/inventory.json"
+DATA_FILE = "/share/inventory_manager/inventory.json"
+LEGACY_FILE = "/data/inventory.json"
 
 print(f"[Warenwirtschaft] Data file path: {os.path.abspath(DATA_FILE)}")
 
+def _ensure_dir(path):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+def _maybe_migrate():
+    """Kopiere alte Daten aus /data nach /share, falls vorhanden."""
+    if os.path.exists(LEGACY_FILE) and not os.path.exists(DATA_FILE):
+        _ensure_dir(DATA_FILE)
+        try:
+            with open(LEGACY_FILE, "r", encoding="utf-8") as src:
+                with open(DATA_FILE, "w", encoding="utf-8") as dst:
+                    dst.write(src.read())
+            print(f"[Warenwirtschaft] Daten von {LEGACY_FILE} nach {DATA_FILE} migriert.")
+        except Exception as e:
+            print(f"[Warenwirtschaft] Migration fehlgeschlagen: {e}")
+
 def load_data():
+    _maybe_migrate()
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, "r", encoding="utf-8") as f:
@@ -18,9 +35,10 @@ def load_data():
     return []
 
 def save_data(data):
-    os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
+    _ensure_dir(DATA_FILE)
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
+    print("[Warenwirtschaft] Daten gespeichert.")
 
 app = Flask(__name__)
 
