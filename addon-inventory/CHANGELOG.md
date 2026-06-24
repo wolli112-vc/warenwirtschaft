@@ -7,4 +7,7 @@
 - Aktualisierung von build.yaml config.yaml Dockerfile
 
 ## 1.0.2 - 2026-06-24
-- Aktualisierung von index.html und app
+- Aktualisierung von index.html in app
+
+## 1.0.3 - 2026-06-24
+- Aktualisierung von app.py in app, config.yaml 
