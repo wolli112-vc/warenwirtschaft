@@ -18,4 +18,12 @@
 - Relative API-Pfade für korrekte Ingress-Funktionalität
 - Visuelle Warnung bei Verfallsdaten (rot/gelb)
 - Suchfunktion über Produktliste
-- Direkte Mengensteuerung per `+`/`-` Buttons 
+- Direkte Mengensteuerung per `+`/`-` Buttons
+
+## 1.0.5 - 2026-06-24
+- Neue Spalte **Kategorie** hinzugefügt
+- Kategorien sind **frei eingebbar** (Textfeld) mit Vorschlägen aus bestehenden Kategorien (Datalist)
+- Produkte werden nach **Kategorie gruppiert** und sortiert angezeigt
+- Kategorie-Gruppen sind visuell hervorgehoben (blaue Header-Zeile)
+- Suche erweitert: Filtert jetzt auch nach Kategorie
+- Neue API-Endpunkte: `GET /api/categories` für Kategorie-Vorschläge 
