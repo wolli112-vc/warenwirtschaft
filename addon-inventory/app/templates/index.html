@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warenwirtschaft</title>
+    <style>
+        :root {
+            --primary: #03a9f4;
+            --bg: #fafafa;
+            --card: #fff;
+            --border: #e0e0e0;
+            --text: #212121;
+            --muted: #757575;
+            --green: #4caf50;
+            --red: #f44336;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 1rem;
+        }
+        h1 { margin: 0 0 1rem 0; font-size: 1.5rem; }
+        .search-wrap { margin-bottom: 1rem; }
+        .search-wrap input {
+            width: 100%;
+            max-width: 400px;
+            padding: .5rem .75rem;
+            font-size: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: .6rem .8rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background: #f5f5f5;
+            font-weight: 600;
+            font-size: .9rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
+        .col-btns { width: 80px; text-align: center; }
+        .col-qty { width: 70px; }
+        .col-exp { width: 130px; }
+        .btn {
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 1rem;
+            line-height: 1;
+            cursor: pointer;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-green { background: var(--green); }
+        .btn-red  { background: var(--red); }
+        .btn:hover { opacity: .85; }
+        .btn:active { transform: scale(.95); }
+        .new-row input {
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: .35rem .5rem;
+            width: 100%;
+            font-size: .95rem;
+        }
+        .new-row td { vertical-align: middle; }
+        .actions { display: flex; gap: .35rem; justify-content: center; }
+        .save-btn {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: .4rem .9rem;
+            cursor: pointer;
+            font-size: .9rem;
+        }
+        .save-btn:hover { opacity: .9; }
+        .expires-soon { background: #fff8e1; }
+        .expires-today { background: #ffebee; }
+        @media (max-width: 600px) {
+            th, td { padding: .4rem .5rem; font-size: .9rem; }
+            .col-exp, .col-qty { width: auto; }
+        }
+    </style>
+</head>
+<body>
+    <h1>🧊 Warenwirtschaft</h1>
+    <div class="search-wrap">
+        <input type="text" id="search" placeholder="Produkt suchen..." autocomplete="off">
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th class="col-btns"></th>
+                <th class="col-qty">Anzahl</th>
+                <th>Produkt</th>
+                <th class="col-exp">Verfallsdatum</th>
+            </tr>
+        </thead>
+        <tbody id="items-body">
+            <!-- rows rendered by JS -->
+        </tbody>
+        <tfoot>
+            <tr class="new-row">
+                <td></td>
+                <td><input type="number" id="new-qty" value="1" min="1"></td>
+                <td><input type="text" id="new-product" placeholder="Produktname" autocomplete="off"></td>
+                <td><input type="date" id="new-expires"></td>
+            </tr>
+            <tr class="new-row">
+                <td colspan="4" style="text-align:right; border:none;">
+                    <button class="save-btn" onclick="addItem()">➕ Hinzufügen</button>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <script>
+        let allItems = [];
+
+        async function api(path, opts={}) {
+            const res = await fetch('./api' + path, opts);
+            if (!res.ok) throw new Error(res.statusText);
+            return res.json();
+        }
+
+        async function load() {
+            allItems = await api('/items');
+            render();
+        }
+
+        function todayStr() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function getRowClass(exp) {
+            if (!exp) return '';
+            const d = new Date(exp);
+            const now = new Date();
+            const diff = Math.ceil((d - now) / (1000*60*60*24));
+            if (diff < 0) return 'expires-today';
+            if (diff <= 3) return 'expires-soon';
+            return '';
+        }
+
+        function render() {
+            const q = document.getElementById('search').value.toLowerCase();
+            const tbody = document.getElementById('items-body');
+            tbody.innerHTML = '';
+            const filtered = allItems.filter(i => i.product.toLowerCase().includes(q));
+            filtered.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = getRowClass(item.expires);
+                tr.innerHTML = `
+                    <td class="col-btns">
+                        <div class="actions">
+                            <button class="btn btn-green" onclick="changeQty('${item.id}', 1)">+</button>
+                            <button class="btn btn-red"  onclick="changeQty('${item.id}', -1)">−</button>
+                        </div>
+                    </td>
+                    <td class="col-qty">${item.quantity}</td>
+                    <td>${escapeHtml(item.product)}</td>
+                    <td class="col-exp">${item.expires || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function escapeHtml(t) {
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+
+        async function changeQty(id, delta) {
+            const item = allItems.find(i => i.id === id);
+            if (!item) return;
+            const newQty = Math.max(0, item.quantity + delta);
+            await api(`/items/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({quantity: newQty})
+            });
+            if (newQty === 0) {
+                await api(`/items/${id}`, {method: 'DELETE'});
+            }
+            await load();
+        }
+
+        async function addItem() {
+            const qty = parseInt(document.getElementById('new-qty').value) || 1;
+            const product = document.getElementById('new-product').value.trim();
+            const expires = document.getElementById('new-expires').value;
+            if (!product) { alert('Bitte Produktname eingeben'); return; }
+            await api('/items', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({quantity: qty, product, expires})
+            });
+            document.getElementById('new-product').value = '';
+            document.getElementById('new-expires').value = '';
+            document.getElementById('new-qty').value = '1';
+            await load();
+        }
+
+        document.getElementById('search').addEventListener('input', render);
+        load();
+    </script>
+</body>
+</html>
