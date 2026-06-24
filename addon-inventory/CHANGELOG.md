@@ -26,4 +26,10 @@
 - Produkte werden nach **Kategorie gruppiert** und sortiert angezeigt
 - Kategorie-Gruppen sind visuell hervorgehoben (blaue Header-Zeile)
 - Suche erweitert: Filtert jetzt auch nach Kategorie
-- Neue API-Endpunkte: `GET /api/categories` für Kategorie-Vorschläge 
+- Neue API-Endpunkte: `GET /api/categories` für Kategorie-Vorschläge
+
+## 1.0.6 - 2026-06-24
+- **Datenspeicherung** umgestellt auf `/share/inventory_manager/inventory.json`
+- Daten überleben jetzt **auch bei Deinstallation** des Add-ons (neuinstallation + Updates)
+- Automatische **Migration** vorhandener Daten aus `/data` nach `/share` beim ersten Start
+- Der Schieber "App Daten ebenfalls entfernen" wirkt sich nicht mehr auf die Inventardaten aus 
