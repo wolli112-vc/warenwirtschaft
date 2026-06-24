@@ -31,9 +31,15 @@ def index():
 @app.route("/api/items", methods=["GET"])
 def get_items():
     items = load_data()
-    # Sortiere nach Verfallsdatum
-    items.sort(key=lambda x: x.get("expires", "9999-99-99"))
+    # Sortiere nach Kategorie, dann Verfallsdatum
+    items.sort(key=lambda x: (x.get("category", "").lower(), x.get("expires", "9999-99-99")))
     return jsonify(items)
+
+@app.route("/api/categories", methods=["GET"])
+def get_categories():
+    items = load_data()
+    cats = sorted(set(i.get("category", "").strip() for i in items if i.get("category", "").strip()))
+    return jsonify(cats)
 
 @app.route("/api/items", methods=["POST"])
 def add_item():
@@ -43,6 +49,7 @@ def add_item():
         "id": datetime.now().strftime("%Y%m%d%H%M%S%f"),
         "quantity": int(data.get("quantity", 1)),
         "product": data.get("product", "").strip(),
+        "category": data.get("category", "").strip(),
         "expires": data.get("expires", "").strip()
     }
     items.append(new_item)
@@ -59,6 +66,8 @@ def update_item(item_id):
                 item["quantity"] = max(0, int(data["quantity"]))
             if "product" in data:
                 item["product"] = data["product"].strip()
+            if "category" in data:
+                item["category"] = data["category"].strip()
             if "expires" in data:
                 item["expires"] = data["expires"].strip()
             save_data(items)
