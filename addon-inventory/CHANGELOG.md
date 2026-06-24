@@ -32,4 +32,8 @@
 - **Datenspeicherung** umgestellt auf `/share/inventory_manager/inventory.json`
 - Daten überleben jetzt **auch bei Deinstallation** des Add-ons (neuinstallation + Updates)
 - Automatische **Migration** vorhandener Daten aus `/data` nach `/share` beim ersten Start
-- Der Schieber "App Daten ebenfalls entfernen" wirkt sich nicht mehr auf die Inventardaten aus 
+- Der Schieber "App Daten ebenfalls entfernen" wirkt sich nicht mehr auf die Inventardaten aus
+
+## 1.0.7 - 2026-06-24
+- **Kritischer Fix**: Berechtigung `map: share:rw` hinzugefügt – sonst hat das Add-on keinen Zugriff auf den Host-Ordner `/share`
+- Daten werden jetzt wirklich außerhalb des Containers gespeichert und überleben Deinstallationen 
