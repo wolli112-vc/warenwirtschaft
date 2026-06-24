@@ -3,5 +3,5 @@
 ## 1.0 – 2026-06-24
 - Erstveröffentlichung des Add-Ons
 
-## 1.1 - 2026-06-24
+## 1.0.1 - 2026-06-24
 - Aktualisierung von build.yaml config.yaml Dockerfile
