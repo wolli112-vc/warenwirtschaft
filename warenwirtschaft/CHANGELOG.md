@@ -34,13 +34,15 @@
 - Automatische **Migration** vorhandener Daten aus `/data` nach `/share` beim ersten Start
 - Der Schieber "App Daten ebenfalls entfernen" wirkt sich nicht mehr auf die Inventardaten aus
 
-## 1.0.8 - 2026-07-13
+## 1.0.9 - 2026-07-13
 - **Inline-Edit**: Alle Einträge sind jetzt jederzeit direkt editierbar per Klick auf Anzahl, Produkt, Kategorie oder Verfallsdatum
 - **Löschen-Button**: Jede Zeile hat jetzt einen ✕-Button zum direkten Löschen
 - **Auto-Refresh**: Daten werden alle 10 Sekunden aktualisiert, pausiert während man editiert
 - **Aktualisieren-Button**: 🔄-Button zum manuellen Neuladen
 - **Leere-Zustand-Anzeige**: Anzeige "Keine Einträge vorhanden" wenn die Liste leer ist
-- API-Endpunkt `POST /api/clear` hinzugefügt (🗑️ Alles löschen)
+
+## 1.0.8 - Entfernt
+- "Alles löschen"-Funktion entfernt (bei Inventar-Tracking nicht sinnvoll)
 
 ## 1.0.7 - 2026-06-24
 - **Kritischer Fix**: Berechtigung `map: share:rw` hinzugefügt – sonst hat das Add-on keinen Zugriff auf den Host-Ordner `/share`

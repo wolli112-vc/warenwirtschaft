@@ -99,10 +99,5 @@ def delete_item(item_id):
     save_data(items)
     return jsonify({"success": True})
 
-@app.route("/api/clear", methods=["POST"])
-def clear_all():
-    save_data([])
-    return jsonify({"success": True})
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8099)

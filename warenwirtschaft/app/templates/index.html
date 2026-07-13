@@ -155,7 +155,6 @@
     <div class="search-wrap">
         <input type="text" id="search" placeholder="Produkt oder Kategorie suchen..." autocomplete="off">
         <button class="btn-action" onclick="load()" title="Aktualisieren">🔄</button>
-        <button class="btn-action" onclick="clearAll()">🗑️ Alles löschen</button>
     </div>
     <table>
         <thead>
@@ -415,12 +414,6 @@
             document.getElementById('new-category').value = '';
             document.getElementById('new-expires').value = '';
             document.getElementById('new-qty').value = '1';
-            await load();
-        }
-
-        async function clearAll() {
-            if (!confirm('Wirklich ALLE Einträge löschen?')) return;
-            await api('/clear', {method: 'POST'});
             await load();
         }
 
