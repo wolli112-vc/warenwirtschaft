@@ -1,24 +1,22 @@
 # Changelog
 
-## 1.0 – 2026-06-24
-- Erstveröffentlichung des Add-Ons
+## 1.0.9 - 2026-07-13
+- **Inline-Edit**: Alle Einträge sind jetzt jederzeit direkt editierbar per Klick auf Anzahl, Produkt, Kategorie oder Verfallsdatum
+- **Löschen-Button**: Jede Zeile hat jetzt einen ✕-Button zum direkten Löschen
+- **Auto-Refresh**: Daten werden alle 10 Sekunden aktualisiert, pausiert während man editiert
+- **Aktualisieren-Button**: 🔄-Button zum manuellen Neuladen
+- **Leere-Zustand-Anzeige**: Anzeige "Keine Einträge vorhanden" wenn die Liste leer ist
+- "Alles löschen"-Funktion entfernt (bei Inventar-Tracking nicht sinnvoll)
 
-## 1.0.1 - 2026-06-24
-- Aktualisierung von build.yaml config.yaml Dockerfile
+## 1.0.7 - 2026-06-24
+- **Kritischer Fix**: Berechtigung `map: share:rw` hinzugefügt – sonst hat das Add-on keinen Zugriff auf den Host-Ordner `/share`
+- Daten werden jetzt wirklich außerhalb des Containers gespeichert und überleben Deinstallationen
 
-## 1.0.2 - 2026-06-24
-- Aktualisierung von index.html in app
-
-## 1.0.3 - 2026-06-24
-- Aktualisierung von app.py in app, config.yaml 
-
-## 1.0.4 - 2026-06-24
-- Stabiles Release mit persistenter Datenhaltung, Ingress-Support und Funktions-Update
-- JSON-Daten werden unter `/data/inventory.json` gespeichert
-- Relative API-Pfade für korrekte Ingress-Funktionalität
-- Visuelle Warnung bei Verfallsdaten (rot/gelb)
-- Suchfunktion über Produktliste
-- Direkte Mengensteuerung per `+`/`-` Buttons
+## 1.0.6 - 2026-06-24
+- **Datenspeicherung** umgestellt auf `/share/inventory_manager/inventory.json`
+- Daten überleben jetzt **auch bei Deinstallation** des Add-ons (neuinstallation + Updates)
+- Automatische **Migration** vorhandener Daten aus `/data` nach `/share` beim ersten Start
+- Der Schieber "App Daten ebenfalls entfernen" wirkt sich nicht mehr auf die Inventardaten aus
 
 ## 1.0.5 - 2026-06-24
 - Neue Spalte **Kategorie** hinzugefügt
@@ -28,22 +26,22 @@
 - Suche erweitert: Filtert jetzt auch nach Kategorie
 - Neue API-Endpunkte: `GET /api/categories` für Kategorie-Vorschläge
 
-## 1.0.6 - 2026-06-24
-- **Datenspeicherung** umgestellt auf `/share/inventory_manager/inventory.json`
-- Daten überleben jetzt **auch bei Deinstallation** des Add-ons (neuinstallation + Updates)
-- Automatische **Migration** vorhandener Daten aus `/data` nach `/share` beim ersten Start
-- Der Schieber "App Daten ebenfalls entfernen" wirkt sich nicht mehr auf die Inventardaten aus
+## 1.0.4 - 2026-06-24
+- Stabiles Release mit persistenter Datenhaltung, Ingress-Support und Funktions-Update
+- JSON-Daten werden unter `/data/inventory.json` gespeichert
+- Relative API-Pfade für korrekte Ingress-Funktionalität
+- Visuelle Warnung bei Verfallsdaten (rot/gelb)
+- Suchfunktion über Produktliste
+- Direkte Mengensteuerung per `+`/`-` Buttons
 
-## 1.0.9 - 2026-07-13
-- **Inline-Edit**: Alle Einträge sind jetzt jederzeit direkt editierbar per Klick auf Anzahl, Produkt, Kategorie oder Verfallsdatum
-- **Löschen-Button**: Jede Zeile hat jetzt einen ✕-Button zum direkten Löschen
-- **Auto-Refresh**: Daten werden alle 10 Sekunden aktualisiert, pausiert während man editiert
-- **Aktualisieren-Button**: 🔄-Button zum manuellen Neuladen
-- **Leere-Zustand-Anzeige**: Anzeige "Keine Einträge vorhanden" wenn die Liste leer ist
+## 1.0.3 - 2026-06-24
+- Aktualisierung von app.py in app, config.yaml
 
-## 1.0.8 - Entfernt
-- "Alles löschen"-Funktion entfernt (bei Inventar-Tracking nicht sinnvoll)
+## 1.0.2 - 2026-06-24
+- Aktualisierung von index.html in app
 
-## 1.0.7 - 2026-06-24
-- **Kritischer Fix**: Berechtigung `map: share:rw` hinzugefügt – sonst hat das Add-on keinen Zugriff auf den Host-Ordner `/share`
-- Daten werden jetzt wirklich außerhalb des Containers gespeichert und überleben Deinstallationen 
+## 1.0.1 - 2026-06-24
+- Aktualisierung von build.yaml config.yaml Dockerfile
+
+## 1.0 – 2026-06-24
+- Erstveröffentlichung des Add-Ons
