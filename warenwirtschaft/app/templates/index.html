@@ -16,6 +16,7 @@
             --red: #f44336;
             --cat-bg: #e3f2fd;
             --cat-text: #1565c0;
+            --orange: #ff9800;
         }
         * { box-sizing: border-box; }
         body {
@@ -26,15 +27,25 @@
             padding: 1rem;
         }
         h1 { margin: 0 0 1rem 0; font-size: 1.5rem; }
-        .search-wrap { margin-bottom: 1rem; }
+        .search-wrap { margin-bottom: 1rem; display: flex; gap: .5rem; flex-wrap: wrap; }
         .search-wrap input {
-            width: 100%;
-            max-width: 400px;
+            flex: 1;
+            min-width: 200px;
             padding: .5rem .75rem;
             font-size: 1rem;
             border: 1px solid var(--border);
             border-radius: 4px;
         }
+        .btn-action {
+            background: var(--orange);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: .5rem 1rem;
+            cursor: pointer;
+            font-size: .9rem;
+        }
+        .btn-action:hover { opacity: .9; }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -56,7 +67,7 @@
             text-transform: uppercase;
             letter-spacing: .03em;
         }
-        .col-btns { width: 80px; text-align: center; }
+        .col-btns { width: 120px; text-align: center; }
         .col-qty { width: 70px; }
         .col-cat { width: 140px; }
         .col-exp { width: 130px; }
@@ -117,9 +128,25 @@
             font-weight: 500;
         }
         .cat-empty { color: var(--muted); font-style: italic; }
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--muted);
+        }
+        td.editable { cursor: pointer; }
+        td.editable:hover { background: #f0f0f0; }
+        td.editing input, td.editing select {
+            width: 100%;
+            font-size: .95rem;
+            padding: .25rem .4rem;
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+        }
         @media (max-width: 600px) {
             th, td { padding: .4rem .5rem; font-size: .9rem; }
-            .col-exp, .col-qty, .col-cat { width: auto; }
+            .col-btns { width: 100px; }
+            .col-qty, .col-cat, .col-exp { width: auto; }
+            .btn { width: 24px; height: 24px; font-size: .85rem; }
         }
     </style>
 </head>
@@ -127,6 +154,8 @@
     <h1>🧊 Warenwirtschaft</h1>
     <div class="search-wrap">
         <input type="text" id="search" placeholder="Produkt oder Kategorie suchen..." autocomplete="off">
+        <button class="btn-action" onclick="load()" title="Aktualisieren">🔄</button>
+        <button class="btn-action" onclick="clearAll()">🗑️ Alles löschen</button>
     </div>
     <table>
         <thead>
@@ -139,7 +168,7 @@
             </tr>
         </thead>
         <tbody id="items-body">
-            <!-- rows rendered by JS -->
+            <tr><td colspan="5" class="empty-state">Lade Daten...</td></tr>
         </tbody>
         <tfoot>
             <tr class="new-row">
@@ -163,6 +192,7 @@
     <script>
         let allItems = [];
         let allCategories = [];
+        let autoRefreshInterval = null;
 
         async function api(path, opts={}) {
             const res = await fetch('./api' + path, opts);
@@ -177,6 +207,17 @@
             ]);
             updateCatList();
             render();
+        }
+
+        function isEditing() {
+            return document.querySelector('td.editing') !== null;
+        }
+
+        function startAutoRefresh() {
+            if (autoRefreshInterval) return;
+            autoRefreshInterval = setInterval(() => {
+                if (!isEditing()) load();
+            }, 10000);
         }
 
         function updateCatList() {
@@ -203,17 +244,23 @@
             const q = document.getElementById('search').value.toLowerCase();
             const tbody = document.getElementById('items-body');
             tbody.innerHTML = '';
-            
-            const filtered = allItems.filter(i => 
-                i.product.toLowerCase().includes(q) || 
+
+            const filtered = allItems.filter(i =>
+                i.product.toLowerCase().includes(q) ||
                 (i.category || '').toLowerCase().includes(q)
             );
-            
+
+            if (filtered.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="5" class="empty-state">Keine Einträge vorhanden</td>`;
+                tbody.appendChild(tr);
+                return;
+            }
+
             let lastCat = null;
             filtered.forEach(item => {
                 const cat = item.category || '';
-                const catLabel = cat || 'Ohne Kategorie';
-                
+
                 if (cat !== lastCat) {
                     const tr = document.createElement('tr');
                     tr.className = 'cat-group';
@@ -221,22 +268,109 @@
                     tbody.appendChild(tr);
                     lastCat = cat;
                 }
-                
+
                 const tr = document.createElement('tr');
                 tr.className = getRowClass(item.expires);
+                tr.dataset.id = item.id;
                 tr.innerHTML = `
                     <td class="col-btns">
                         <div class="actions">
                             <button class="btn btn-green" onclick="changeQty('${item.id}', 1)">+</button>
                             <button class="btn btn-red"  onclick="changeQty('${item.id}', -1)">−</button>
+                            <button class="btn btn-red" onclick="deleteItem('${item.id}')">✕</button>
                         </div>
                     </td>
-                    <td class="col-qty">${item.quantity}</td>
-                    <td class="col-cat">${cat ? '<span class="cat-tag">' + escapeHtml(cat) + '</span>' : '-'}</td>
-                    <td>${escapeHtml(item.product)}</td>
-                    <td class="col-exp">${item.expires || '-'}</td>
+                    <td class="col-qty editable" data-field="quantity" data-id="${item.id}">${item.quantity}</td>
+                    <td class="col-cat editable" data-field="category" data-id="${item.id}">${cat ? '<span class="cat-tag">' + escapeHtml(cat) + '</span>' : '-'}</td>
+                    <td class="editable" data-field="product" data-id="${item.id}">${escapeHtml(item.product)}</td>
+                    <td class="col-exp editable" data-field="expires" data-id="${item.id}">${item.expires || '-'}</td>
                 `;
                 tbody.appendChild(tr);
+            });
+
+            // Klick-Handler für Inline-Edit
+            tbody.querySelectorAll('td.editable').forEach(td => {
+                td.addEventListener('click', function(e) {
+                    if (this.classList.contains('editing')) return;
+                    startEdit(this);
+                });
+            });
+        }
+
+        function startEdit(td) {
+            const field = td.dataset.field;
+            const id = td.dataset.id;
+            const item = allItems.find(i => i.id === id);
+            if (!item) return;
+
+            td.classList.add('editing');
+            let input;
+
+            if (field === 'category') {
+                input = document.createElement('input');
+                input.type = 'text';
+                input.value = item.category || '';
+                input.setAttribute('list', 'cat-list');
+            } else if (field === 'quantity') {
+                input = document.createElement('input');
+                input.type = 'number';
+                input.value = item.quantity;
+                input.min = 1;
+            } else if (field === 'expires') {
+                input = document.createElement('input');
+                input.type = 'date';
+                input.value = item.expires || '';
+            } else {
+                input = document.createElement('input');
+                input.type = 'text';
+                input.value = item.product;
+            }
+
+            td.innerHTML = '';
+            td.appendChild(input);
+            input.focus();
+            input.select();
+
+            function save() {
+                let value = input.value.trim();
+                if (field === 'quantity') {
+                    value = parseInt(value) || item.quantity;
+                    if (value < 1) value = 1;
+                }
+                td.classList.remove('editing');
+                td.innerHTML = '';
+
+                const oldVal = field === 'quantity' ? item.quantity : (item[field] || '');
+                if (value === oldVal) {
+                    render();
+                    return;
+                }
+
+                const payload = {};
+                payload[field] = value;
+                api(`/items/${id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(payload)
+                }).then(() => load()).catch(err => {
+                    alert('Fehler beim Speichern: ' + err.message);
+                    load();
+                });
+            }
+
+            function cancel() {
+                td.classList.remove('editing');
+                render();
+            }
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') save();
+                if (e.key === 'Escape') cancel();
+            });
+            input.addEventListener('blur', function() {
+                setTimeout(() => {
+                    if (td.classList.contains('editing')) save();
+                }, 150);
             });
         }
 
@@ -261,6 +395,11 @@
             await load();
         }
 
+        async function deleteItem(id) {
+            await api(`/items/${id}`, {method: 'DELETE'});
+            await load();
+        }
+
         async function addItem() {
             const qty = parseInt(document.getElementById('new-qty').value) || 1;
             const product = document.getElementById('new-product').value.trim();
@@ -279,8 +418,18 @@
             await load();
         }
 
+        async function clearAll() {
+            if (!confirm('Wirklich ALLE Einträge löschen?')) return;
+            await api('/clear', {method: 'POST'});
+            await load();
+        }
+
         document.getElementById('search').addEventListener('input', render);
+        document.getElementById('new-product').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') addItem();
+        });
         load();
+        startAutoRefresh();
     </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 name: "Warenwirtschaft"
-version: "1.0.7"
+version: "1.0.8"
 slug: "warenwirtschaft"
 description: "Einfaches Inventar-Tracking mit Verfallsdaten"
 url: "https://github.com/wolli112/warenwirtschaft"
