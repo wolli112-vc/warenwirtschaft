@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 
-DATA_FILE = "/share/inventory_manager/inventory.json"
+DATA_FILE = "/share/warenwirtschaft/inventory.json"
 LEGACY_FILE = "/data/inventory.json"
 
 print(f"[Warenwirtschaft] Data file path: {os.path.abspath(DATA_FILE)}")
