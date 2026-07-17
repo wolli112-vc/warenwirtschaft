@@ -128,6 +128,8 @@
             font-weight: 500;
         }
         .cat-empty { color: var(--muted); font-style: italic; }
+        .row-qty-zero { background-color: #ffebee !important; }
+        .row-qty-one  { background-color: #fff3e0 !important; }
         .empty-state {
             text-align: center;
             padding: 2rem;
@@ -269,7 +271,10 @@
                 }
 
                 const tr = document.createElement('tr');
-                tr.className = getRowClass(item.expires);
+                let rowCls = getRowClass(item.expires);
+                if (item.quantity === 0) rowCls += ' row-qty-zero';
+                else if (item.quantity === 1) rowCls += ' row-qty-one';
+                tr.className = rowCls.trim();
                 tr.dataset.id = item.id;
                 tr.innerHTML = `
                     <td class="col-btns">
@@ -314,7 +319,7 @@
                 input = document.createElement('input');
                 input.type = 'number';
                 input.value = item.quantity;
-                input.min = 1;
+                input.min = 0;
             } else if (field === 'expires') {
                 input = document.createElement('input');
                 input.type = 'date';
@@ -333,8 +338,8 @@
             function save() {
                 let value = input.value.trim();
                 if (field === 'quantity') {
-                    value = parseInt(value) || item.quantity;
-                    if (value < 1) value = 1;
+                    value = parseInt(value) || 0;
+                    if (value < 0) value = 0;
                 }
                 td.classList.remove('editing');
                 td.innerHTML = '';
@@ -388,9 +393,6 @@
                 headers: {'Content-Type':'application/json'},
                 body: JSON.stringify({quantity: newQty})
             });
-            if (newQty === 0) {
-                await api(`/items/${id}`, {method: 'DELETE'});
-            }
             await load();
         }
 

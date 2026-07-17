@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.10 - 2026-07-17
+- **Einträge mit 0 bleiben stehen**: Der `−`-Button setzt die Anzahl auf 0, löscht den Eintrag aber nicht mehr automatisch
+- **Löschen nur über ✕**: Einträge können nur noch explizit über den roten ✕-Button entfernt werden
+- **Farbcodierung nach Anzahl**: Zeilen mit Anzahl **0** werden rot hinterlegt, Zeilen mit Anzahl **1** orange
+- Inline-Edit erlaubt jetzt ebenfalls den Wert 0
+
 ## 1.0.9 - 2026-07-13
 - **Inline-Edit**: Alle Einträge sind jetzt jederzeit direkt editierbar per Klick auf Anzahl, Produkt, Kategorie oder Verfallsdatum
 - **Löschen-Button**: Jede Zeile hat jetzt einen ✕-Button zum direkten Löschen
