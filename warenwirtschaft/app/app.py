@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import fcntl
 import json
 import os
 from datetime import datetime
@@ -6,6 +7,7 @@ from flask import Flask, render_template, request, jsonify
 
 DATA_FILE = "/share/warenwirtschaft/inventory.json"
 LEGACY_FILE = "/data/inventory.json"
+SHOPPING_FILE = "/share/einkaufsliste/einkaufsliste.json"
 
 print(f"[Warenwirtschaft] Data file path: {os.path.abspath(DATA_FILE)}")
 
@@ -39,6 +41,25 @@ def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
     print("[Warenwirtschaft] Daten gespeichert.")
+
+def _load_json_locked(path):
+    if not os.path.exists(path):
+        return []
+    with open(path, "r", encoding="utf-8") as f:
+        fcntl.flock(f, fcntl.LOCK_SH)
+        try:
+            return json.load(f)
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
+
+def _save_json_locked(path, data):
+    _ensure_dir(path)
+    with open(path, "w", encoding="utf-8") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        try:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
 
 app = Flask(__name__)
 
@@ -98,6 +119,33 @@ def delete_item(item_id):
     items = [i for i in items if i["id"] != item_id]
     save_data(items)
     return jsonify({"success": True})
+
+@app.route("/api/to-shopping-list", methods=["POST"])
+def to_shopping_list():
+    data = request.get_json()
+    product = data.get("product", "").strip()
+    category = data.get("category", "").strip()
+    qty = max(1, int(data.get("quantity", 1)))
+    if not product:
+        return jsonify({"error": "Produktname fehlt"}), 400
+
+    try:
+        items = _load_json_locked(SHOPPING_FILE)
+        existing = next((i for i in items if i.get("product", "").strip().lower() == product.lower()), None)
+        if existing:
+            existing["quantity"] = max(1, int(existing.get("quantity", 0))) + qty
+        else:
+            new_item = {
+                "id": datetime.now().strftime("%Y%m%d%H%M%S%f"),
+                "quantity": qty,
+                "product": product,
+                "category": category
+            }
+            items.append(new_item)
+        _save_json_locked(SHOPPING_FILE, items)
+        return jsonify({"success": True, "quantity": qty}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8099)

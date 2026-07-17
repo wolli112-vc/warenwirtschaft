@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0 - 2026-07-17
+- **Einkaufslisten-Integration**: Wenn ein Eintrag auf 0 gesetzt wird, erscheint ein Dialog zur Übernahme in die Einkaufsliste
+- **Neuer API-Endpunkt** `POST /api/to-shopping-list`: Schreibt direkt in die Einkaufsliste-JSON mit File-Locking
+- **File-Locking** hinzugefügt, um gleichzeitige Schreibzugriffe auf die Einkaufsliste zu verhindern
+- Auto-Refresh pausiert automatisch während des Dialogs
+
 ## 1.0.10 - 2026-07-17
 - **Einträge mit 0 bleiben stehen**: Der `−`-Button setzt die Anzahl auf 0, löscht den Eintrag aber nicht mehr automatisch
 - **Löschen nur über ✕**: Einträge können nur noch explizit über den roten ✕-Button entfernt werden

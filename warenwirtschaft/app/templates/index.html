@@ -144,6 +144,46 @@
             border: 1px solid var(--primary);
             border-radius: 4px;
         }
+        /* Modal styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.visible { display: flex; }
+        .modal-box {
+            background: var(--card);
+            border-radius: 8px;
+            padding: 1.5rem;
+            max-width: 360px;
+            width: 90%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .modal-box h3 { margin: 0 0 .75rem 0; font-size: 1.1rem; }
+        .modal-box p { margin: 0 0 1rem 0; color: var(--muted); font-size: .95rem; }
+        .modal-box .modal-product { font-weight: 600; color: var(--text); }
+        .modal-box input[type="number"] {
+            width: 100%;
+            padding: .5rem .75rem;
+            font-size: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        .modal-actions { display: flex; gap: .5rem; justify-content: flex-end; }
+        .modal-actions button {
+            padding: .5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            font-size: .95rem;
+            cursor: pointer;
+        }
+        .modal-btn-yes { background: var(--green); color: #fff; }
+        .modal-btn-no { background: var(--border); color: var(--text); }
         @media (max-width: 600px) {
             th, td { padding: .4rem .5rem; font-size: .9rem; }
             .col-btns { width: 100px; }
@@ -190,10 +230,60 @@
         </tfoot>
     </table>
 
+    <!-- Modal: Zur Einkaufsliste hinzufügen? -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-box">
+            <h3>🛒 Zur Einkaufsliste hinzufügen?</h3>
+            <p>Das Produkt <span class="modal-product" id="modal-product-name"></span> ist jetzt auf 0. Möchtest du es zur Einkaufsliste hinzufügen?</p>
+            <label for="modal-qty" style="font-size:.9rem; color:var(--muted);">Menge:</label>
+            <input type="number" id="modal-qty" value="1" min="1">
+            <div class="modal-actions">
+                <button class="modal-btn-no" id="modal-btn-no">Nein</button>
+                <button class="modal-btn-yes" id="modal-btn-yes">Ja</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let allItems = [];
         let allCategories = [];
         let autoRefreshInterval = null;
+
+        let modalResolve = null;
+        let modalPending = false;
+
+        async function showShoppingModal(item) {
+            return new Promise(resolve => {
+                modalResolve = resolve;
+                modalPending = true;
+                document.getElementById('modal-product-name').textContent = item.product;
+                document.getElementById('modal-qty').value = 1;
+                document.getElementById('modal-overlay').classList.add('visible');
+                document.getElementById('modal-qty').focus();
+                document.getElementById('modal-qty').select();
+            });
+        }
+
+        function hideModal() {
+            document.getElementById('modal-overlay').classList.remove('visible');
+            modalPending = false;
+            modalResolve = null;
+        }
+
+        document.getElementById('modal-btn-yes').addEventListener('click', () => {
+            if (modalResolve) modalResolve({ add: true, qty: parseInt(document.getElementById('modal-qty').value) || 1 });
+            hideModal();
+        });
+
+        document.getElementById('modal-btn-no').addEventListener('click', () => {
+            if (modalResolve) modalResolve({ add: false });
+            hideModal();
+        });
+
+        document.getElementById('modal-qty').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') document.getElementById('modal-btn-yes').click();
+            if (e.key === 'Escape') document.getElementById('modal-btn-no').click();
+        });
 
         async function api(path, opts={}) {
             const res = await fetch('./api' + path, opts);
@@ -215,9 +305,9 @@
         }
 
         function startAutoRefresh() {
-            if (autoRefreshInterval) return;
+            if (autoRefreshInterval || modalPending) return;
             autoRefreshInterval = setInterval(() => {
-                if (!isEditing()) load();
+                if (!isEditing() && !modalPending) load();
             }, 10000);
         }
 
@@ -335,7 +425,7 @@
             input.focus();
             input.select();
 
-            function save() {
+            async function save() {
                 let value = input.value.trim();
                 if (field === 'quantity') {
                     value = parseInt(value) || 0;
@@ -350,16 +440,29 @@
                     return;
                 }
 
+                // Modal bei quantity = 0 über Inline-Edit
+                if (field === 'quantity' && oldVal > 0 && value === 0) {
+                    if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                    const answer = await showShoppingModal(item);
+                    if (answer.add) {
+                        await api('/to-shopping-list', {
+                            method: 'POST',
+                            headers: {'Content-Type':'application/json'},
+                            body: JSON.stringify({product: item.product, category: item.category || '', quantity: answer.qty})
+                        });
+                    }
+                    startAutoRefresh();
+                }
+
                 const payload = {};
                 payload[field] = value;
-                api(`/items/${id}`, {
+                await api(`/items/${id}`, {
                     method: 'PUT',
                     headers: {'Content-Type':'application/json'},
                     body: JSON.stringify(payload)
-                }).then(() => load()).catch(err => {
-                    alert('Fehler beim Speichern: ' + err.message);
-                    load();
                 });
+                await load();
             }
 
             function cancel() {
@@ -367,13 +470,13 @@
                 render();
             }
 
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') save();
+            input.addEventListener('keydown', async function(e) {
+                if (e.key === 'Enter') await save();
                 if (e.key === 'Escape') cancel();
             });
             input.addEventListener('blur', function() {
-                setTimeout(() => {
-                    if (td.classList.contains('editing')) save();
+                setTimeout(async () => {
+                    if (td.classList.contains('editing')) await save();
                 }, 150);
             });
         }
@@ -388,12 +491,28 @@
             const item = allItems.find(i => i.id === id);
             if (!item) return;
             const newQty = Math.max(0, item.quantity + delta);
+
+            if (item.quantity > 0 && newQty === 0) {
+                // Pause auto-refresh während Modal
+                if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                const answer = await showShoppingModal(item);
+                if (answer.add) {
+                    await api('/to-shopping-list', {
+                        method: 'POST',
+                        headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify({product: item.product, category: item.category || '', quantity: answer.qty})
+                    });
+                }
+            }
+
             await api(`/items/${id}`, {
                 method: 'PUT',
                 headers: {'Content-Type':'application/json'},
                 body: JSON.stringify({quantity: newQty})
             });
             await load();
+            startAutoRefresh();
         }
 
         async function deleteItem(id) {
