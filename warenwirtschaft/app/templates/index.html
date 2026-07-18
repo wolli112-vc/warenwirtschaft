@@ -208,13 +208,10 @@
                 <th class="col-exp">Verfallsdatum</th>
             </tr>
         </thead>
-        <tbody id="items-body">
-            <tr><td colspan="5" class="empty-state">Lade Daten...</td></tr>
-        </tbody>
-        <tfoot>
+        <tbody>
             <tr class="new-row">
                 <td></td>
-                <td><input type="number" id="new-qty" value="1" min="1"></td>
+                <td><input type="number" id="new-qty" value="1" min="1" step="any"></td>
                 <td>
                     <input list="cat-list" id="new-category" placeholder="Kategorie (optional)" autocomplete="off">
                     <datalist id="cat-list"></datalist>
@@ -227,7 +224,10 @@
                     <button class="save-btn" onclick="addItem()">➕ Hinzufügen</button>
                 </td>
             </tr>
-        </tfoot>
+        </tbody>
+        <tbody id="items-body">
+            <tr><td colspan="5" class="empty-state">Lade Daten...</td></tr>
+        </tbody>
     </table>
 
     <!-- Modal: Zur Einkaufsliste hinzufügen? -->
@@ -236,7 +236,7 @@
             <h3>🛒 Zur Einkaufsliste hinzufügen?</h3>
             <p>Das Produkt <span class="modal-product" id="modal-product-name"></span> ist jetzt auf 0. Möchtest du es zur Einkaufsliste hinzufügen?</p>
             <label for="modal-qty" style="font-size:.9rem; color:var(--muted);">Menge:</label>
-            <input type="number" id="modal-qty" value="1" min="1">
+            <input type="number" id="modal-qty" value="1" min="1" step="any">
             <div class="modal-actions">
                 <button class="modal-btn-no" id="modal-btn-no">Nein</button>
                 <button class="modal-btn-yes" id="modal-btn-yes">Ja</button>
@@ -271,7 +271,7 @@
         }
 
         document.getElementById('modal-btn-yes').addEventListener('click', () => {
-            if (modalResolve) modalResolve({ add: true, qty: parseInt(document.getElementById('modal-qty').value) || 1 });
+            if (modalResolve) modalResolve({ add: true, qty: parseFloat(document.getElementById('modal-qty').value) || 1 });
             hideModal();
         });
 
@@ -410,6 +410,7 @@
                 input.type = 'number';
                 input.value = item.quantity;
                 input.min = 0;
+                input.step = 'any';
             } else if (field === 'expires') {
                 input = document.createElement('input');
                 input.type = 'date';
@@ -428,7 +429,7 @@
             async function save() {
                 let value = input.value.trim();
                 if (field === 'quantity') {
-                    value = parseInt(value) || 0;
+                    value = parseFloat(value) || 0;
                     if (value < 0) value = 0;
                 }
                 td.classList.remove('editing');
@@ -490,7 +491,9 @@
         async function changeQty(id, delta) {
             const item = allItems.find(i => i.id === id);
             if (!item) return;
-            const newQty = Math.max(0, item.quantity + delta);
+            const intPart = Math.floor(item.quantity);
+            const fracPart = item.quantity - intPart;
+            const newQty = Math.max(0, intPart + delta + fracPart);
 
             if (item.quantity > 0 && newQty === 0) {
                 // Pause auto-refresh während Modal
@@ -521,7 +524,7 @@
         }
 
         async function addItem() {
-            const qty = parseInt(document.getElementById('new-qty').value) || 1;
+            const qty = parseFloat(document.getElementById('new-qty').value) || 1;
             const product = document.getElementById('new-product').value.trim();
             const category = document.getElementById('new-category').value.trim();
             const expires = document.getElementById('new-expires').value;

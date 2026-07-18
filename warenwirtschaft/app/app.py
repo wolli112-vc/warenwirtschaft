@@ -86,7 +86,7 @@ def add_item():
     items = load_data()
     new_item = {
         "id": datetime.now().strftime("%Y%m%d%H%M%S%f"),
-        "quantity": int(data.get("quantity", 1)),
+        "quantity": float(data.get("quantity", 1)),
         "product": data.get("product", "").strip(),
         "category": data.get("category", "").strip(),
         "expires": data.get("expires", "").strip()
@@ -102,7 +102,7 @@ def update_item(item_id):
     for item in items:
         if item["id"] == item_id:
             if "quantity" in data:
-                item["quantity"] = max(0, int(data["quantity"]))
+                item["quantity"] = max(0, float(data["quantity"]))
             if "product" in data:
                 item["product"] = data["product"].strip()
             if "category" in data:
@@ -125,7 +125,7 @@ def to_shopping_list():
     data = request.get_json()
     product = data.get("product", "").strip()
     category = data.get("category", "").strip()
-    qty = max(1, int(data.get("quantity", 1)))
+    qty = float(data.get("quantity", 1))
     if not product:
         return jsonify({"error": "Produktname fehlt"}), 400
 
@@ -133,7 +133,7 @@ def to_shopping_list():
         items = _load_json_locked(SHOPPING_FILE)
         existing = next((i for i in items if i.get("product", "").strip().lower() == product.lower()), None)
         if existing:
-            existing["quantity"] = max(1, int(existing.get("quantity", 0))) + qty
+            existing["quantity"] = max(0, float(existing.get("quantity", 0))) + qty
         else:
             new_item = {
                 "id": datetime.now().strftime("%Y%m%d%H%M%S%f"),

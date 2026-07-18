@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1 - 2026-07-18
+- **Eingabezeile oben**: Neue Einträge werden jetzt über der Liste hinzugefügt
+- **Kommazahlen für Mengen**: Mengen unterstützen jetzt Dezimalzahlen (z. B. 1,5)
+- **+/- Buttons**: Erhöhen/verringern nur die ganze Stelle vor dem Komma (1,5 → + → 2,5)
+
 ## 1.1.0 - 2026-07-17
 - **Einkaufslisten-Integration**: Wenn ein Eintrag auf 0 gesetzt wird, erscheint ein Dialog zur Übernahme in die Einkaufsliste
 - **Neuer API-Endpunkt** `POST /api/to-shopping-list`: Schreibt direkt in die Einkaufsliste-JSON mit File-Locking
