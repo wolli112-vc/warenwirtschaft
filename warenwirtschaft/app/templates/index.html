@@ -371,7 +371,6 @@
                         <div class="actions">
                             <button class="btn btn-green" onclick="changeQty('${item.id}', 1)">+</button>
                             <button class="btn btn-red"  onclick="changeQty('${item.id}', -1)">−</button>
-                            <button class="btn btn-red" onclick="deleteItem('${item.id}')">✕</button>
                         </div>
                     </td>
                     <td class="col-qty editable" data-field="quantity" data-id="${item.id}">${item.quantity}</td>
@@ -491,6 +490,14 @@
         async function changeQty(id, delta) {
             const item = allItems.find(i => i.id === id);
             if (!item) return;
+
+            if (item.quantity === 0 && delta === -1) {
+                if (confirm(`"${item.product}" wirklich aus der Liste entfernen?`)) {
+                    await deleteItem(id);
+                }
+                return;
+            }
+
             const intPart = Math.floor(item.quantity);
             const fracPart = item.quantity - intPart;
             const newQty = Math.max(0, intPart + delta + fracPart);

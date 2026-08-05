@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2 - 2026-08-05
+- **✕-Button entfernt**: Direktes Löschen über den roten Button ist nicht mehr möglich
+- **Sicheres Entfernen bei 0**: Wenn ein Eintrag auf 0 steht und erneut auf − geklickt wird, erscheint eine Bestätigungsabfrage vor dem endgültigen Löschen
+
 ## 1.1.1 - 2026-07-18
 - **Eingabezeile oben**: Neue Einträge werden jetzt über der Liste hinzugefügt
 - **Kommazahlen für Mengen**: Mengen unterstützen jetzt Dezimalzahlen (z. B. 1,5)
