@@ -70,8 +70,8 @@ def index():
 @app.route("/api/items", methods=["GET"])
 def get_items():
     items = load_data()
-    # Sortiere nach Kategorie, dann Verfallsdatum
-    items.sort(key=lambda x: (x.get("category", "").lower(), x.get("expires", "9999-99-99")))
+    # Sortiere nach Kategorie, dann alphabetisch nach Produkt
+    items.sort(key=lambda x: (x.get("category", "").lower(), x.get("product", "").lower()))
     return jsonify(items)
 
 @app.route("/api/categories", methods=["GET"])
